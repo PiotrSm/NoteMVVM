@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(List<Note> notes) {
                 //update RecylcerViere
-                Toast.makeText(MainActivity.this, "onChanged", Toast.LENGTH_SHORT).show();//testowo
+                Toast.makeText(MainActivity.this, "onChanged", Toast.LENGTH_LONG).show();//testowo
             }
         });
     }
