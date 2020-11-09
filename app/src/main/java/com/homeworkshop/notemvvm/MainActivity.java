@@ -1,10 +1,12 @@
 package com.homeworkshop.notemvvm;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -63,6 +65,23 @@ public class MainActivity extends AppCompatActivity {
                 adapter.setNotes(notes);
             }
         });
+        //klasa która obsługuje zdarzenia wywoływane na SWIPE
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                //usuwamy notatkę z viewModel z określonej pozycji wskazanej przez viewHolder i wybranej z Adaptera
+                noteViewModel.delete(adapter.getNoteAt(viewHolder.getAdapterPosition()));
+                // nie potrzebujemy nic updatować bo update wykonuje się automatycznie sam
+
+                Toast.makeText(MainActivity.this, "Note deleted", Toast.LENGTH_SHORT).show();
+            }
+        }).attachToRecyclerView(recyclerView); // na końcu musimy ItemTouchHelper dołączyć do recyclerView żeby działał
     }
 
     //metoda wywoływana kiedy wrócą rezultaty z wywoływanej aktywności. W tym przypadku z AddNoteActivity

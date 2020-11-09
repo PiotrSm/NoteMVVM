@@ -38,6 +38,10 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
         this.notes = notes;
         notifyDataSetChanged();
     }
+    //zwraca notatkę na danej pozycji - potrzebne np do usuwania danej notatki
+    public Note getNoteAt(int position){
+        return notes.get(position);
+    }
 
     class NoteHolder extends RecyclerView.ViewHolder{
         private TextView textViewTitle;
