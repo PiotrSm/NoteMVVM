@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -13,13 +14,16 @@ import android.widget.NumberPicker;
 import android.widget.Toast;
 
 public class AddEditNoteActivity extends AppCompatActivity {
+    private static final String TAG = "AddEditNoteActivity";
     public static final String EXTRA_TITLE = "com.homeworkshop.notemvvm.EXTRA_TITLE";
     public static final String EXTRA_DESCRIPTION = "com.homeworkshop.notemvvm.EXTRA_DESCRIPTION";
     public static final String EXTRA_PRI0RITY = "com.homeworkshop.notemvvm.EXTRA_PRIRITY";
     public static final String EXTRA_ID = "com.homeworkshop.notemvvm.EXTRA_ID";
+    public static final String EXTRA_NOTE = "com.homeworkshop.notemvvm.EXTRA_NOTE";
     private EditText editTextTitle;
     private EditText editTextDescription;
     private NumberPicker numberPickerPriority;
+    Note currentNote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,11 +41,15 @@ public class AddEditNoteActivity extends AppCompatActivity {
 
         //ustawiamiamy tytuł na belce i wyświetlane pola wartościami z intenta jeżeli przyjdzie on z intencją edytowania
         Intent intent = getIntent();
-        if (intent.hasExtra(EXTRA_ID)) {
+
+        currentNote = (Note) intent.getSerializableExtra(EXTRA_NOTE);
+        Log.i(TAG, "onCreate: "+ currentNote);
+
+        if (currentNote != null) {
             setTitle("Edit Note");
-            editTextTitle.setText(intent.getStringExtra(EXTRA_TITLE));
-            editTextDescription.setText((intent.getStringExtra(EXTRA_DESCRIPTION)));
-            numberPickerPriority.setValue(intent.getIntExtra(EXTRA_PRI0RITY,1));
+            editTextTitle.setText(currentNote.getTitle());
+            editTextDescription.setText((currentNote.getDescription()));
+            numberPickerPriority.setValue(currentNote.getPriority());
         } else {
             setTitle("Add note");
         }
@@ -57,15 +65,15 @@ public class AddEditNoteActivity extends AppCompatActivity {
             return;
         }
         Intent data = new Intent();
-        data.putExtra(EXTRA_TITLE, title);
-        data.putExtra(EXTRA_DESCRIPTION, description);
-        data.putExtra(EXTRA_PRI0RITY, priority);
 
-        //pobieramy id z intent extra a jeżeli go nie ma to ustawiamy -1 wiedząc że takiego id nie będzie w realu
-        int id = getIntent().getIntExtra(EXTRA_ID,-1);
-        if(id != -1){
-            //jeżeli w intencie była jakieś konkretne id to dadajemy je do rezultow do responsu
-            data.putExtra(EXTRA_ID,id);
+        if(currentNote != null){
+            currentNote.setTitle(title);
+            currentNote.setDescription(description);
+            currentNote.setPriority(priority);
+            data.putExtra(EXTRA_NOTE,currentNote);
+        }else{
+            Note newNote = new Note(title,description,priority);
+            data.putExtra(EXTRA_NOTE,newNote);
         }
 
         setResult(RESULT_OK, data); //jeżeli wszystko pójdzie ok to wróci do poprzedniej actywności z tymi danymi

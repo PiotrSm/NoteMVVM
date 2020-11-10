@@ -91,11 +91,8 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(Note note) {
                 //Alt  + F6 refactoring rename
                 Intent intent = new Intent(MainActivity.this, AddEditNoteActivity.class);
-                //dodatkowo przekazujemy id które potem będziemy otrzmywać w responsie aby uaktualnic notatkę
-                intent.putExtra(EXTRA_ID, note.getId());
-                intent.putExtra(EXTRA_TITLE, note.getTitle());
-                intent.putExtra(EXTRA_DESCRIPTION, note.getDescription());
-                intent.putExtra(EXTRA_PRI0RITY, note.getPriority());
+                //przekazujemy cała notatkę
+                intent.putExtra(EXTRA_NOTE, note);
                 //uruchamiamy activity z osobnym numerem requestu aby rezultaty odbierać dotyczace tego konkretnego requestu (EDIT)
                 startActivityForResult(intent, EDIT_NOTE_REQUEST);
             }
@@ -108,24 +105,19 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == ADD_NOTE_REQUEST && resultCode == RESULT_OK) {
-            String title = data.getStringExtra(EXTRA_TITLE);
-            String description = data.getStringExtra(EXTRA_DESCRIPTION);
-            int priority = data.getIntExtra(EXTRA_PRI0RITY, 1);
 
-            Note note = new Note(title, description, priority);
-            noteViewModel.insert(note);
-            Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
-        } else  if (requestCode == EDIT_NOTE_REQUEST && resultCode == RESULT_OK) {
-            int id = data.getIntExtra(EXTRA_ID, -1);
-            if(id == -1){
+            Note note = (Note) data.getSerializableExtra(EXTRA_NOTE);
+            if (note != null) {
+                noteViewModel.insert(note);
+                Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(this, "Note can't be saved", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == EDIT_NOTE_REQUEST && resultCode == RESULT_OK) {
+            Note note = (Note) data.getSerializableExtra(EXTRA_NOTE);
+            if (note == null) {
                 Toast.makeText(this, "Note can't be updated", Toast.LENGTH_SHORT).show();
             }
-            String title = data.getStringExtra(EXTRA_TITLE);
-            String description = data.getStringExtra(EXTRA_DESCRIPTION);
-            int priority = data.getIntExtra(EXTRA_PRI0RITY, 1);
-
-            Note note = new Note(title, description, priority);
-            note.setId(id);
             noteViewModel.update(note);
             Toast.makeText(this, "Note updated", Toast.LENGTH_SHORT).show();
         } else {
