@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(List<Note> notes) {
                 //za każdym razem jak się zmienią dane w ViewModel zostanią uaktualnione notatki w adapterze
-                adapter.setNotes(notes);
+                adapter.submitList(notes);
             }
         });
         //klasa która obsługuje zdarzenia wywoływane na SWIPE
