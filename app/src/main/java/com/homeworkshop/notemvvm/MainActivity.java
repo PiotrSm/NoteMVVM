@@ -5,7 +5,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,11 +21,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
 
-import static com.homeworkshop.notemvvm.AddNoteActivity.*;
+import static com.homeworkshop.notemvvm.AddEditNoteActivity.*;
 
 public class MainActivity extends AppCompatActivity {
     //stała indentyfikująca wywoływaną w intentcie aktywność, dla każdej wywoływanej aktywności inny kod.
     public static final int ADD_NOTE_REQUEST = 1;
+    private static final int EDIT_NOTE_REQUEST = 2;
     private NoteViewModel noteViewModel;
 
     @Override
@@ -40,9 +40,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //nie możemy przekazać poprostu 'this' bo 'this' wskazuje na OnClickListener. Musimy przekazać MainActivity.this
-                Intent intent = new Intent(MainActivity.this,AddNoteActivity.class);
+                Intent intent = new Intent(MainActivity.this, AddEditNoteActivity.class);
                 //Podajemy różne request code żeby rozróżnić wywyłania dla różnych aktywności, dlatego najlepiej mieć stałą dla każdej wywoływanej aktywności
-                startActivityForResult(intent,ADD_NOTE_REQUEST);
+                startActivityForResult(intent, ADD_NOTE_REQUEST);
             }
         });
 
@@ -85,6 +85,21 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Note deleted", Toast.LENGTH_SHORT).show();
             }
         }).attachToRecyclerView(recyclerView); // na końcu musimy ItemTouchHelper dołączyć do recyclerView żeby działał
+
+        adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(Note note) {
+                //Alt  + F6 refactoring rename
+                Intent intent = new Intent(MainActivity.this, AddEditNoteActivity.class);
+                //dodatkowo przekazujemy id które potem będziemy otrzmywać w responsie aby uaktualnic notatkę
+                intent.putExtra(EXTRA_ID, note.getId());
+                intent.putExtra(EXTRA_TITLE, note.getTitle());
+                intent.putExtra(EXTRA_DESCRIPTION, note.getDescription());
+                intent.putExtra(EXTRA_PRI0RITY, note.getPriority());
+                //uruchamiamy activity z osobnym numerem requestu aby rezultaty odbierać dotyczace tego konkretnego requestu (EDIT)
+                startActivityForResult(intent, EDIT_NOTE_REQUEST);
+            }
+        });
     }
 
     //metoda wywoływana kiedy wrócą rezultaty z wywoływanej aktywności. W tym przypadku z AddNoteActivity
@@ -92,15 +107,28 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == ADD_NOTE_REQUEST && resultCode == RESULT_OK){
+        if (requestCode == ADD_NOTE_REQUEST && resultCode == RESULT_OK) {
             String title = data.getStringExtra(EXTRA_TITLE);
             String description = data.getStringExtra(EXTRA_DESCRIPTION);
-            int priority = data.getIntExtra(EXTRA_PRIRITY,1);
+            int priority = data.getIntExtra(EXTRA_PRI0RITY, 1);
 
-            Note note = new Note(title,description,priority);
+            Note note = new Note(title, description, priority);
             noteViewModel.insert(note);
             Toast.makeText(this, "Note saved", Toast.LENGTH_SHORT).show();
-        }else {
+        } else  if (requestCode == EDIT_NOTE_REQUEST && resultCode == RESULT_OK) {
+            int id = data.getIntExtra(EXTRA_ID, -1);
+            if(id == -1){
+                Toast.makeText(this, "Note can't be updated", Toast.LENGTH_SHORT).show();
+            }
+            String title = data.getStringExtra(EXTRA_TITLE);
+            String description = data.getStringExtra(EXTRA_DESCRIPTION);
+            int priority = data.getIntExtra(EXTRA_PRI0RITY, 1);
+
+            Note note = new Note(title, description, priority);
+            note.setId(id);
+            noteViewModel.update(note);
+            Toast.makeText(this, "Note updated", Toast.LENGTH_SHORT).show();
+        } else {
             Toast.makeText(this, "Note not saved", Toast.LENGTH_SHORT).show();
         }
     }
@@ -108,13 +136,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.main_menu,menu);
+        menuInflater.inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.delete_all_notes:
                 noteViewModel.deleteAllNotes();
                 Toast.makeText(this, "All notes deleted", Toast.LENGTH_SHORT).show();
