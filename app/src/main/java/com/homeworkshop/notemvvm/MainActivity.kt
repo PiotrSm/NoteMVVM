@@ -14,7 +14,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.homeworkshop.notemvvm.MainActivity
 
 class MainActivity : AppCompatActivity() {
-    private var noteViewModel: NoteViewModel? = null
+     lateinit var noteViewModel: NoteViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -53,19 +53,24 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 //usuwamy notatkę z viewModel z określonej pozycji wskazanej przez viewHolder i wybranej z Adaptera
-                noteViewModel!!.delete(adapter.getNoteAt(viewHolder.adapterPosition))
+                noteViewModel.delete(adapter.getNoteAt(viewHolder.adapterPosition))
                 // nie potrzebujemy nic updatować bo update wykonuje się automatycznie sam
                 Toast.makeText(this@MainActivity, "Note deleted", Toast.LENGTH_SHORT).show()
             }
         }).attachToRecyclerView(recyclerView) // na końcu musimy ItemTouchHelper dołączyć do recyclerView żeby działał
-        adapter.setOnItemClickListener { note -> //Alt  + F6 refactoring rename
-            val intent = Intent(this@MainActivity, AddEditNoteActivity::class.java)
-            //przekazujemy cała notatkę
-            intent.putExtra(AddEditNoteActivity.EXTRA_NOTE, note)
-            //uruchamiamy activity z osobnym numerem requestu aby rezultaty odbierać dotyczace tego konkretnego requestu (EDIT)
-            startActivityForResult(intent, EDIT_NOTE_REQUEST)
-        }
+
+        adapter.setOnItemClickListener (object : NoteAdapter.OnItemClickListener{
+
+            override fun onItemClick(note: Note) {
+                val intent = Intent(this@MainActivity, AddEditNoteActivity::class.java)
+                //przekazujemy cała notatkę
+                intent.putExtra(AddEditNoteActivity.EXTRA_NOTE, note)
+                //uruchamiamy activity z osobnym numerem requestu aby rezultaty odbierać dotyczace tego konkretnego requestu (EDIT)
+                startActivityForResult(intent, EDIT_NOTE_REQUEST)
+            }
+        })
     }
+
 
     //metoda wywoływana kiedy wrócą rezultaty z wywoływanej aktywności. W tym przypadku z AddNoteActivity
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
